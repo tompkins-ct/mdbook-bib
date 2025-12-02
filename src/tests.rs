@@ -1,7 +1,7 @@
 use crate::config::DEFAULT_JS_TEMPLATE;
 use crate::config::{SortOrder, DEFAULT_HB_TEMPLATE};
 use crate::config::{DEFAULT_CITE_HB_TEMPLATE, DEFAULT_CSS_TEMPLATE};
-use crate::Bibiography;
+use crate::{Bibiography, AT_REF_PATTERN, REF_PATTERN};
 use indexmap::IndexMap;
 use mdbook::MDBook;
 use std::fs::File;
@@ -598,15 +598,7 @@ fn process_test_book() {
 fn test_regex_pattern() {
     use regex::Regex;
 
-    let pattern = r"
-(?x)                       # insignificant whitespace mode
-\\\{\{\#.*\}\}               # match escaped placeholder
-|                            # or
-\{\{\s*                      # placeholder opening parens and whitespace
-\#([a-zA-Z0-9_]+)            # placeholder type
-\s+                          # separating whitespace
-([a-zA-Z0-9\s_.\-:/\\\+]+)   # placeholder target path and space separated properties
-\s*\}\}                      # whitespace and placeholder closing parens";
+    let pattern = REF_PATTERN;
 
     let re = Regex::new(pattern).unwrap();
 
@@ -615,6 +607,7 @@ fn test_regex_pattern() {
         "{{#cite DUMMY:1}}",
         "{{#cite test-key}}",
         "{{#cite test_key}}",
+        "{{#include link-not-citation}}",
     ];
 
     for test_case in test_cases {
@@ -623,7 +616,7 @@ fn test_regex_pattern() {
             println!("  Match found!");
             println!("  Full match: '{}'", captures.get(0).unwrap().as_str());
             if let Some(typ) = captures.get(1) {
-                println!("  Type: '{}'", typ.as_str());
+                assert!(typ.as_str().starts_with("cite"));
             }
             if let Some(rest) = captures.get(2) {
                 println!("  Rest: '{}'", rest.as_str());
@@ -640,7 +633,7 @@ fn test_at_ref_pattern_with_dots() {
     use regex::Regex;
 
     // Test the AT_REF_PATTERN specifically
-    let at_pattern = r##"(@@)([^\[\]\s,;"#'()={}%]+)"##;
+    let at_pattern = AT_REF_PATTERN;
     let re = Regex::new(at_pattern).unwrap();
 
     let test_cases = vec![

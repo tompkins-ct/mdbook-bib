@@ -709,17 +709,17 @@ fn replace_all_placeholders(
 }
 
 // Regex patterns for citation placeholders
-const REF_PATTERN: &str = r"
+pub(crate) const REF_PATTERN: &str = r"
 (?x)                       # insignificant whitespace mode
 \\\{\{\#.*\}\}               # match escaped placeholder
 |                            # or
 \{\{\s*                      # placeholder opening parens and whitespace
-\#([a-zA-Z0-9_]+)            # placeholder type
+\#(cite)                     # placeholder type must be cite
 \s+                          # separating whitespace
 ([a-zA-Z0-9\s_.\-:/\\\+]+)   # placeholder target path and space separated properties
 \s*\}\}                      # whitespace and placeholder closing parens";
 
-const AT_REF_PATTERN: &str = r##"(@@)([^\[\]\s,;"#'()={}%]+)"##;
+pub(crate) const AT_REF_PATTERN: &str = r##"(@@)([^\[\]\s,;"#'()={}%]+)"##;
 
 fn breadcrumbs_up_to_root(source_file: &std::path::Path) -> String {
     if source_file.as_os_str().is_empty() {
